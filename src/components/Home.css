@@ -1,0 +1,16 @@
+/* src/components/Home.css */
+.home {
+    text-align: center;
+    padding: 50px;
+    background-color: #f4f4f4; /* Color suave */
+    color: #333; /* Color de texto */
+}
+
+.home h2 {
+    font-size: 36px;
+    margin-bottom: 20px;
+}
+
+.home p {
+    font-size: 18px;
+}
