@@ -1,4 +1,3 @@
-// src/components/Citas.js
 import React, { useState } from 'react';
 import './Citas.css'; // Para estilos personalizados
 import Notification from './Notification'; // Importar el componente de notificación
@@ -11,6 +10,8 @@ const Citas = () => {
         fechaCita: '',
         horaCita: '',
         estilista: '',
+        servicio: '', // Nuevo campo para servicio
+        producto: '', // Nuevo campo para producto
         notas: '',
     });
 
@@ -18,7 +19,10 @@ const Citas = () => {
     const [notificationMessage, setNotificationMessage] = useState('');
     const [severity, setSeverity] = useState('success');
 
+    // Listas de prueba para servicios y productos
     const estilistas = ['Estilista 1', 'Estilista 2', 'Estilista 3']; // Datos de prueba
+    const servicios = ['Corte de cabello', 'Tinte', 'Manicura']; // Nuevos datos de prueba
+    const productos = ['Shampoo', 'Acondicionador', 'Gel']; // Nuevos datos de prueba
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -46,6 +50,8 @@ const Citas = () => {
                 fechaCita: '',
                 horaCita: '',
                 estilista: '',
+                servicio: '', // Limpiar servicio
+                producto: '', // Limpiar producto
                 notas: '',
             });
         } catch (error) {
@@ -53,6 +59,8 @@ const Citas = () => {
             setSeverity('error');
             setOpenNotification(true);
         }
+
+        
     };
 
     const handleCloseNotification = () => {
@@ -63,6 +71,7 @@ const Citas = () => {
         <div className="citas">
             <h2>Reserva tu Cita</h2>
             <form onSubmit={handleSubmit}>
+                {/* Campo Nombre */}
                 <div className="form-group">
                     <label htmlFor="nombreCompleto">Nombre Completo *</label>
                     <input
@@ -74,6 +83,8 @@ const Citas = () => {
                         onChange={handleChange}
                     />
                 </div>
+
+                {/* Campo Teléfono */}
                 <div className="form-group">
                     <label htmlFor="numeroTelefono">Número de Teléfono *</label>
                     <input
@@ -85,6 +96,8 @@ const Citas = () => {
                         onChange={handleChange}
                     />
                 </div>
+
+                {/* Campo Correo */}
                 <div className="form-group">
                     <label htmlFor="correoElectronico">Correo Electrónico (opcional)</label>
                     <input
@@ -95,6 +108,8 @@ const Citas = () => {
                         onChange={handleChange}
                     />
                 </div>
+
+                {/* Campo Fecha */}
                 <div className="form-group">
                     <label htmlFor="fechaCita">Fecha Cita *</label>
                     <input
@@ -106,6 +121,8 @@ const Citas = () => {
                         onChange={handleChange}
                     />
                 </div>
+
+                {/* Campo Hora */}
                 <div className="form-group">
                     <label htmlFor="horaCita">Hora Cita *</label>
                     <input
@@ -117,6 +134,8 @@ const Citas = () => {
                         onChange={handleChange}
                     />
                 </div>
+
+                {/* Campo Estilista */}
                 <div className="form-group">
                     <label htmlFor="estilista">Preferencias de Estilista *</label>
                     <select
@@ -134,6 +153,46 @@ const Citas = () => {
                         ))}
                     </select>
                 </div>
+
+                {/* Campo Servicio */}
+                <div className="form-group">
+                    <label htmlFor="servicio">Servicio *</label>
+                    <select
+                        id="servicio"
+                        name="servicio"
+                        required
+                        value={formData.servicio}
+                        onChange={handleChange}
+                    >
+                        <option value="">Selecciona un servicio</option>
+                        {servicios.map((servicio, index) => (
+                            <option key={index} value={servicio}>
+                                {servicio}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                {/* Campo Producto */}
+                <div className="form-group">
+                    <label htmlFor="producto">Producto *</label>
+                    <select
+                        id="producto"
+                        name="producto"
+                        required
+                        value={formData.producto}
+                        onChange={handleChange}
+                    >
+                        <option value="">Selecciona un producto</option>
+                        {productos.map((producto, index) => (
+                            <option key={index} value={producto}>
+                                {producto}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                {/* Campo Notas */}
                 <div className="form-group">
                     <label htmlFor="notas">Notas Adicionales (opcional)</label>
                     <textarea
@@ -143,6 +202,7 @@ const Citas = () => {
                         onChange={handleChange}
                     />
                 </div>
+
                 <button type="submit">Reservar Cita</button>
             </form>
 
