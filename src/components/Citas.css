@@ -1,4 +1,3 @@
-/* src/components/Citas.css */
 .citas {
     display: flex;
     flex-direction: column;
@@ -41,4 +40,33 @@ button {
 
 button:hover {
     background-color: #555; /* Color más claro al pasar el mouse */
+}
+
+/* Estilos para servicios y productos */
+.service-container, .product-container {
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    background-color: #eaeaea;
+    border-radius: 5px;
+}
+
+.checkbox-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.checkbox-item {
+    display: flex;
+    justify-content: space-between; /* Alinea la etiqueta y el checkbox */
+    align-items: center; /* Alinea verticalmente el contenido */
+    margin-bottom: 10px;
+}
+
+.checkbox-label {
+    margin-right: 10px; /* Espacio entre el label y el checkbox */
+}
+
+.checkbox-item input[type="checkbox"] {
+    margin-left: auto; /* Alinea el checkbox a la derecha */
 }

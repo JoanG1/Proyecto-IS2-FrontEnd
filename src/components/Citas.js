@@ -1,57 +1,117 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Citas.css'; // Para estilos personalizados
 import Notification from './Notification'; // Importar el componente de notificación
+import { obtenerEstilistas } from '../api/EstilistasApi'; // Importar la función desde la API de estilistas
+import { obtenerServicios } from '../api/ServiciosApi'; // Importar la función desde la API de servicios
+import { obtenerProductos } from '../api/ProductosApi'; // Importar la función desde la API de productos
 
 const Citas = () => {
     const [formData, setFormData] = useState({
-        nombreCompleto: '',
-        numeroTelefono: '',
-        correoElectronico: '',
-        fechaCita: '',
-        horaCita: '',
-        estilista: '',
-        servicio: '', // Nuevo campo para servicio
-        producto: '', // Nuevo campo para producto
+        fechaCita: '', // Fecha y hora en un mismo valor
+        estilista: '', // Aquí guardaremos el ID del estilista
+        servicios: [],
+        productos: [],
         notas: '',
     });
 
     const [openNotification, setOpenNotification] = useState(false);
     const [notificationMessage, setNotificationMessage] = useState('');
     const [severity, setSeverity] = useState('success');
+    const [estilistas, setEstilistas] = useState([]); // Estado para almacenar los estilistas
+    const [servicios, setServicios] = useState([]); // Estado para almacenar los servicios
+    const [productos, setProductos] = useState([]); // Estado para almacenar los productos
+    const [loadingEstilistas, setLoadingEstilistas] = useState(true); // Estado para mostrar un mensaje de carga para estilistas
+    const [loadingServicios, setLoadingServicios] = useState(true); // Estado para mostrar un mensaje de carga para servicios
+    const [loadingProductos, setLoadingProductos] = useState(true); // Estado para mostrar un mensaje de carga para productos
+    const [errorEstilistas, setErrorEstilistas] = useState(null); // Estado para manejar errores en estilistas
+    const [errorServicios, setErrorServicios] = useState(null); // Estado para manejar errores en servicios
+    const [errorProductos, setErrorProductos] = useState(null); // Estado para manejar errores en productos
 
-    // Listas de prueba para servicios y productos
-    const estilistas = ['Estilista 1', 'Estilista 2', 'Estilista 3']; // Datos de prueba
-    const servicios = ['Corte de cabello', 'Tinte', 'Manicura']; // Nuevos datos de prueba
-    const productos = ['Shampoo', 'Acondicionador', 'Gel']; // Nuevos datos de prueba
+    useEffect(() => {
+        const fetchEstilistas = async () => {
+            try {
+                const estilistasData = await obtenerEstilistas();
+                setEstilistas(estilistasData);
+                setLoadingEstilistas(false);
+            } catch (error) {
+                setErrorEstilistas('Error al cargar los estilistas. Intenta de nuevo más tarde.');
+                setLoadingEstilistas(false);
+            }
+        };
+
+        const fetchServicios = async () => {
+            try {
+                const serviciosData = await obtenerServicios();
+                setServicios(serviciosData);
+                setLoadingServicios(false);
+            } catch (error) {
+                setErrorServicios('Error al cargar los servicios. Intenta de nuevo más tarde.');
+                setLoadingServicios(false);
+            }
+        };
+
+        const fetchProductos = async () => {
+            try {
+                const productosData = await obtenerProductos();
+                setProductos(productosData);
+                setLoadingProductos(false);
+            } catch (error) {
+                setErrorProductos('Error al cargar los productos. Intenta de nuevo más tarde.');
+                setLoadingProductos(false);
+            }
+        };
+
+        fetchEstilistas();
+        fetchServicios();
+        fetchProductos();
+    }, []);
 
     const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData({ ...formData, [name]: value });
+        const { name, value, checked } = e.target;
+
+        if (name === 'servicios') {
+            const selectedService = servicios.find(servicio => servicio.nombre === value);
+            const updatedList = checked
+                ? [...formData.servicios, selectedService]
+                : formData.servicios.filter(servicio => servicio.nombre !== value);
+
+            setFormData({ ...formData, [name]: updatedList });
+
+        } else if (name === 'productos') {
+            const selectedProduct = productos.find(producto => producto.nombre === value);
+            const updatedList = checked
+                ? [...formData.productos, selectedProduct]
+                : formData.productos.filter(producto => producto.nombre !== value);
+
+            setFormData({ ...formData, [name]: updatedList });
+
+        } else {
+            setFormData({ ...formData, [name]: value });
+        }
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        
-        // Aquí podrías manejar el envío del formulario, como enviar a un backend
-        console.log(formData);
-        
-        // Simulando el envío y el resultado
+
+        // Verificar si se ha seleccionado al menos un servicio
+        if (formData.servicios.length === 0) {
+            setNotificationMessage('Debes seleccionar al menos un servicio.');
+            setSeverity('error');
+            setOpenNotification(true);
+            return; // Detener el proceso si no hay servicios seleccionados
+        }
+
+        console.log(formData)
+
         try {
-            // Simular una solicitud exitosa
             setNotificationMessage('Cita guardada y agendada correctamente.');
             setSeverity('success');
             setOpenNotification(true);
-
-            // Limpiar el formulario
             setFormData({
-                nombreCompleto: '',
-                numeroTelefono: '',
-                correoElectronico: '',
                 fechaCita: '',
-                horaCita: '',
                 estilista: '',
-                servicio: '', // Limpiar servicio
-                producto: '', // Limpiar producto
+                servicios: [],
+                productos: [],
                 notas: '',
             });
         } catch (error) {
@@ -59,8 +119,6 @@ const Citas = () => {
             setSeverity('error');
             setOpenNotification(true);
         }
-
-        
     };
 
     const handleCloseNotification = () => {
@@ -71,49 +129,11 @@ const Citas = () => {
         <div className="citas">
             <h2>Reserva tu Cita</h2>
             <form onSubmit={handleSubmit}>
-                {/* Campo Nombre */}
+                {/* Campo Fecha y Hora */}
                 <div className="form-group">
-                    <label htmlFor="nombreCompleto">Nombre Completo *</label>
+                    <label htmlFor="fechaCita">Fecha y Hora *</label>
                     <input
-                        type="text"
-                        id="nombreCompleto"
-                        name="nombreCompleto"
-                        required
-                        value={formData.nombreCompleto}
-                        onChange={handleChange}
-                    />
-                </div>
-
-                {/* Campo Teléfono */}
-                <div className="form-group">
-                    <label htmlFor="numeroTelefono">Número de Teléfono *</label>
-                    <input
-                        type="tel"
-                        id="numeroTelefono"
-                        name="numeroTelefono"
-                        required
-                        value={formData.numeroTelefono}
-                        onChange={handleChange}
-                    />
-                </div>
-
-                {/* Campo Correo */}
-                <div className="form-group">
-                    <label htmlFor="correoElectronico">Correo Electrónico (opcional)</label>
-                    <input
-                        type="email"
-                        id="correoElectronico"
-                        name="correoElectronico"
-                        value={formData.correoElectronico}
-                        onChange={handleChange}
-                    />
-                </div>
-
-                {/* Campo Fecha */}
-                <div className="form-group">
-                    <label htmlFor="fechaCita">Fecha Cita *</label>
-                    <input
-                        type="date"
+                        type="datetime-local"
                         id="fechaCita"
                         name="fechaCita"
                         required
@@ -122,74 +142,85 @@ const Citas = () => {
                     />
                 </div>
 
-                {/* Campo Hora */}
-                <div className="form-group">
-                    <label htmlFor="horaCita">Hora Cita *</label>
-                    <input
-                        type="time"
-                        id="horaCita"
-                        name="horaCita"
-                        required
-                        value={formData.horaCita}
-                        onChange={handleChange}
-                    />
-                </div>
-
                 {/* Campo Estilista */}
                 <div className="form-group">
                     <label htmlFor="estilista">Preferencias de Estilista *</label>
-                    <select
-                        id="estilista"
-                        name="estilista"
-                        required
-                        value={formData.estilista}
-                        onChange={handleChange}
-                    >
-                        <option value="">Selecciona un estilista</option>
-                        {estilistas.map((estilista, index) => (
-                            <option key={index} value={estilista}>
-                                {estilista}
-                            </option>
-                        ))}
-                    </select>
+                    {loadingEstilistas ? (
+                        <p>Cargando estilistas...</p>
+                    ) : errorEstilistas ? (
+                        <p>{errorEstilistas}</p>
+                    ) : (
+                        <select
+                            id="estilista"
+                            name="estilista"
+                            required
+                            value={formData.estilista}
+                            onChange={handleChange}
+                        >
+                            <option value="">Selecciona un estilista</option>
+                            {estilistas.map((estilista, index) => (
+                                <option key={index} value={estilista.id}>
+                                    {estilista.nombre}
+                                </option>
+                            ))}
+                        </select>
+                    )}
                 </div>
 
-                {/* Campo Servicio */}
-                <div className="form-group">
-                    <label htmlFor="servicio">Servicio *</label>
-                    <select
-                        id="servicio"
-                        name="servicio"
-                        required
-                        value={formData.servicio}
-                        onChange={handleChange}
-                    >
-                        <option value="">Selecciona un servicio</option>
-                        {servicios.map((servicio, index) => (
-                            <option key={index} value={servicio}>
-                                {servicio}
-                            </option>
-                        ))}
-                    </select>
+                {/* Servicios */}
+                <h3>Servicios *</h3>
+                <div className="service-container">
+                    {loadingServicios ? (
+                        <p>Cargando servicios...</p>
+                    ) : errorServicios ? (
+                        <p>{errorServicios}</p>
+                    ) : (
+                        <div className="checkbox-group">
+                            {servicios.map((servicio, index) => (
+                                <div className="checkbox-item" key={index}>
+                                    <label className="checkbox-label" htmlFor={`servicio-${index}`}>
+                                        {servicio.nombre}
+                                    </label>
+                                    <input
+                                        type="checkbox"
+                                        id={`servicio-${index}`}
+                                        name="servicios"
+                                        value={servicio.nombre}
+                                        checked={formData.servicios.some(s => s.nombre === servicio.nombre)}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
-                {/* Campo Producto */}
-                <div className="form-group">
-                    <label htmlFor="producto">Producto *</label>
-                    <select
-                        id="producto"
-                        name="producto"
-                        required
-                        value={formData.producto}
-                        onChange={handleChange}
-                    >
-                        <option value="">Selecciona un producto</option>
-                        {productos.map((producto, index) => (
-                            <option key={index} value={producto}>
-                                {producto}
-                            </option>
-                        ))}
-                    </select>
+                {/* Productos */}
+                <h3>Productos *</h3>
+                <div className="product-container">
+                    {loadingProductos ? (
+                        <p>Cargando productos...</p>
+                    ) : errorProductos ? (
+                        <p>{errorProductos}</p>
+                    ) : (
+                        <div className="checkbox-group">
+                            {productos.map((producto, index) => (
+                                <div className="checkbox-item" key={index}>
+                                    <label className="checkbox-label" htmlFor={`producto-${index}`}>
+                                        {producto.nombre} - ${producto.precio}
+                                    </label>
+                                    <input
+                                        type="checkbox"
+                                        id={`producto-${index}`}
+                                        name="productos"
+                                        value={producto.nombre}
+                                        checked={formData.productos.some(p => p.nombre === producto.nombre)}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 {/* Campo Notas */}
