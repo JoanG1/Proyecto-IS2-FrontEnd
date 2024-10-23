@@ -1,7 +1,7 @@
 import './InicioSesion.css'; // Para estilos personalizados
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // Importar useNavigate
-import { crearCliente,inicioSesion } from '../api/ClienteApi'; // Importar la API de crear cliente
+import { crearCliente,inicioSesion, DatosCliente } from '../api/ClienteApi'; // Importar la API de crear cliente
 import Notification from './Notification'; // Importar el componente de notificación
 
 const InicioSesion = ({ onLogin }) => {
@@ -27,54 +27,58 @@ const InicioSesion = ({ onLogin }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
+    
         if (isRegister) {
             try {
-                // Llamar a la función para crear un nuevo cliente
                 const nuevoCliente = await crearCliente(formData);
-
+    
                 if (nuevoCliente) {
-                    console.log('Registro exitoso:', nuevoCliente);
+                    // Guardar el cliente en sessionStorage
+                    sessionStorage.setItem('cliente', JSON.stringify(nuevoCliente));
+    
                     setNotificationMessage('Cliente registrado correctamente');
                     setSeverity('success');
                     setOpenNotification(true);
-
-                    // Ejecutar la navegación después de 2 segundos
+    
+                    // Redirigir al home
                     setTimeout(() => {
-                    onLogin(true); // Lógica después de un registro exitoso
-                    navigate('/'); // Redirigir al Home después de 2 segundos
+                        onLogin(true); // Actualizar el estado de autenticación
+                        navigate('/');
                     }, 2000);
                 }
             } catch (error) {
-                console.log('Error al registrar cliente:', error);
-                setNotificationMessage('Error al registrar el cliente, el correo ya esta registrado');
+                setNotificationMessage('Error al registrar el cliente, el correo ya está registrado');
                 setSeverity('error');
                 setOpenNotification(true);
             }
         } else {
-            // Aquí puedes manejar la lógica de inicio de sesión
-            console.log('Intentando iniciar sesión con:', formData);
-            // Aquí iría la lógica para enviar las credenciales a la API de inicio de sesión
+            try {
+                const respuesta = await inicioSesion(formData);
 
-            const respuesta = await inicioSesion(formData)
-
-            if (respuesta) {
-                console.log('Inicio Sesion Exitoso', respuesta);
-                setNotificationMessage('Inicio de sesion exitoso');
-                setSeverity('success');
-                setOpenNotification(true);
-
-                // Ejecutar la navegación después de 2 segundos
-                setTimeout(() => {
-                onLogin(true); // Lógica después de un registro exitoso
-                navigate('/'); // Redirigir al Home después de 2 segundos
-                }, 1000);
-            }else{
-
-                console.log('El correo no existe, registrelo', formData);
+                const clienteEncontrado = await DatosCliente(formData)
+    
+                if (respuesta) {
+                    // Guardar el cliente en sessionStorage
+                    sessionStorage.setItem('cliente', JSON.stringify(clienteEncontrado));
+    
+                    setNotificationMessage('Inicio de sesión exitoso');
+                    setSeverity('success');
+                    setOpenNotification(true);
+    
+                    // Redirigir al home
+                    setTimeout(() => {
+                        onLogin(true); // Actualizar el estado de autenticación
+                        navigate('/');
+                    }, 1000);
+                } else {
+                    setNotificationMessage('El correo no existe, regístrate');
+                    setSeverity('error');
+                    setOpenNotification(true);
+                }
+            } catch (error) {
+                console.log('Error en inicio de sesión:', error);
             }
         }
-
     };
 
     const handleCloseNotification = () => {

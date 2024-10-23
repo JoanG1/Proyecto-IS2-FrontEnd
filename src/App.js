@@ -1,15 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-import NavBar from './components/NavBar'; // Tu componente de barra de navegación
-import InicioSesion from './components/InicioSesion'; // El componente que creaste para inicio de sesión
-import Citas from './components/Citas'; // Componente de citas
-import Home from './components/Home'; // Componente de Home
+import NavBar from './components/NavBar'; 
+import InicioSesion from './components/InicioSesion'; 
+import Citas from './components/Citas'; 
+import Home from './components/Home';
 
 const App = () => {
-    const [isAuthenticated, setIsAuthenticated] = useState(false); // Estado para la autenticación
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+    // Verificar si hay un cliente en sessionStorage al cargar la app
+    useEffect(() => {
+        const clienteGuardado = sessionStorage.getItem('cliente');
+        if (clienteGuardado) {
+            setIsAuthenticated(true);
+        }
+    }, []);
 
     const handleLogin = (authStatus) => {
         setIsAuthenticated(authStatus);
+        if (!authStatus) {
+            sessionStorage.removeItem('cliente'); // Eliminar cliente al cerrar sesión
+        }
     };
 
     return (
@@ -22,7 +33,7 @@ const App = () => {
                     {/* Ruta para la página de inicio de sesión */}
                     <Route 
                         path="/inicio-sesion" 
-                        element={<InicioSesion onLogin={handleLogin} />} 
+                        element={isAuthenticated ? <Navigate to="/" /> : <InicioSesion onLogin={handleLogin} />} 
                     />
 
                     {/* Si el usuario está autenticado, mostrar las rutas */}

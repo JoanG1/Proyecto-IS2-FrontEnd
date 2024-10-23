@@ -1,33 +1,47 @@
 import React, { useState, useEffect } from 'react';
-import './Citas.css'; // Para estilos personalizados
-import Notification from './Notification'; // Importar el componente de notificación
-import { obtenerEstilistas } from '../api/EstilistasApi'; // Importar la función desde la API de estilistas
-import { obtenerServicios } from '../api/ServiciosApi'; // Importar la función desde la API de servicios
-import { obtenerProductos } from '../api/ProductosApi'; // Importar la función desde la API de productos
+import './Citas.css'; 
+import Notification from './Notification'; 
+import { obtenerEstilistas } from '../api/EstilistasApi'; 
+import { obtenerServicios } from '../api/ServiciosApi'; 
+import { obtenerProductos } from '../api/ProductosApi'; 
+import { CrearCita } from '../api/CitasApi';
 
 const Citas = () => {
     const [formData, setFormData] = useState({
-        fechaCita: '', // Fecha y hora en un mismo valor
-        estilista: '', // Aquí guardaremos el ID del estilista
-        servicios: [],
-        productos: [],
+        fecha: '', // Cambiado de fechaCita a fecha
+        estilistaId: '', // Cambiado de estilista a estilistaId
+        detalleServicioCitaDTOS: [], // Cambiado de servicios a detalleServicioCitaDTOS
+        detalleProductoCitaDTOS: [], // Cambiado de productos a detalleProductoCitaDTOS
         notas: '',
+        clienteId: '', // Campo para almacenar el ID del cliente
     });
 
     const [openNotification, setOpenNotification] = useState(false);
     const [notificationMessage, setNotificationMessage] = useState('');
     const [severity, setSeverity] = useState('success');
-    const [estilistas, setEstilistas] = useState([]); // Estado para almacenar los estilistas
-    const [servicios, setServicios] = useState([]); // Estado para almacenar los servicios
-    const [productos, setProductos] = useState([]); // Estado para almacenar los productos
-    const [loadingEstilistas, setLoadingEstilistas] = useState(true); // Estado para mostrar un mensaje de carga para estilistas
-    const [loadingServicios, setLoadingServicios] = useState(true); // Estado para mostrar un mensaje de carga para servicios
-    const [loadingProductos, setLoadingProductos] = useState(true); // Estado para mostrar un mensaje de carga para productos
-    const [errorEstilistas, setErrorEstilistas] = useState(null); // Estado para manejar errores en estilistas
-    const [errorServicios, setErrorServicios] = useState(null); // Estado para manejar errores en servicios
-    const [errorProductos, setErrorProductos] = useState(null); // Estado para manejar errores en productos
+    const [estilistas, setEstilistas] = useState([]); 
+    const [servicios, setServicios] = useState([]); 
+    const [productos, setProductos] = useState([]); 
+    const [loadingEstilistas, setLoadingEstilistas] = useState(true); 
+    const [loadingServicios, setLoadingServicios] = useState(true); 
+    const [loadingProductos, setLoadingProductos] = useState(true); 
+    const [errorEstilistas, setErrorEstilistas] = useState(null); 
+    const [errorServicios, setErrorServicios] = useState(null); 
+    const [errorProductos, setErrorProductos] = useState(null); 
 
     useEffect(() => {
+        // Obtener cliente de sessionStorage
+        const clienteGuardado = sessionStorage.getItem('cliente');
+        if (clienteGuardado) {
+            const cliente = JSON.parse(clienteGuardado);
+            // Actualizar formData con el ID del cliente
+            setFormData((prevFormData) => ({
+                ...prevFormData,
+                clienteId: cliente.id, // Asegúrate de que 'id' sea el campo correcto
+            }));
+        }
+
+        // Cargar estilistas, servicios y productos
         const fetchEstilistas = async () => {
             try {
                 const estilistasData = await obtenerEstilistas();
@@ -69,19 +83,19 @@ const Citas = () => {
     const handleChange = (e) => {
         const { name, value, checked } = e.target;
 
-        if (name === 'servicios') {
+        if (name === 'detalleServicioCitaDTOS') { // Cambio en el nombre de servicios
             const selectedService = servicios.find(servicio => servicio.nombre === value);
             const updatedList = checked
-                ? [...formData.servicios, selectedService]
-                : formData.servicios.filter(servicio => servicio.nombre !== value);
+                ? [...formData.detalleServicioCitaDTOS, selectedService] // Cambio en el nombre
+                : formData.detalleServicioCitaDTOS.filter(servicio => servicio.nombre !== value);
 
             setFormData({ ...formData, [name]: updatedList });
 
-        } else if (name === 'productos') {
+        } else if (name === 'detalleProductoCitaDTOS') { // Cambio en el nombre de productos
             const selectedProduct = productos.find(producto => producto.nombre === value);
             const updatedList = checked
-                ? [...formData.productos, selectedProduct]
-                : formData.productos.filter(producto => producto.nombre !== value);
+                ? [...formData.detalleProductoCitaDTOS, selectedProduct] // Cambio en el nombre
+                : formData.detalleProductoCitaDTOS.filter(producto => producto.nombre !== value);
 
             setFormData({ ...formData, [name]: updatedList });
 
@@ -90,32 +104,48 @@ const Citas = () => {
         }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-
-        // Verificar si se ha seleccionado al menos un servicio
-        if (formData.servicios.length === 0) {
+    
+        if (formData.detalleServicioCitaDTOS.length === 0) {
             setNotificationMessage('Debes seleccionar al menos un servicio.');
             setSeverity('error');
             setOpenNotification(true);
-            return; // Detener el proceso si no hay servicios seleccionados
+            return;
         }
-
-        console.log(formData)
-
+    
         try {
+
+            // Llamada a la API para crear la cita
+            const nuevaCita = {
+                fecha: formData.fecha+":00", // Cambiado de fechaCita a fecha
+                detalleServicioCitaDTOS: formData.detalleServicioCitaDTOS, // Cambio en el nombre
+                detalleProductoCitaDTOS: formData.detalleProductoCitaDTOS, // Cambio en el nombre
+                clienteId: formData.clienteId,
+                estilistaId: Number(formData.estilistaId) // Cambio en el nombre
+            };
+
+            console.log(nuevaCita);
+    
+            const respuesta = await CrearCita(nuevaCita);
+    
+            // Mostrar notificación de éxito
             setNotificationMessage('Cita guardada y agendada correctamente.');
             setSeverity('success');
             setOpenNotification(true);
+    
+            // Limpiar el formulario
             setFormData({
-                fechaCita: '',
-                estilista: '',
-                servicios: [],
-                productos: [],
+                fecha: '', // Cambiado de fechaCita a fecha
+                estilistaId: '', // Cambio en el nombre
+                detalleServicioCitaDTOS: [], // Cambio en el nombre
+                detalleProductoCitaDTOS: [], // Cambio en el nombre
                 notas: '',
+                clienteId: formData.clienteId, // Mantener el clienteId
             });
         } catch (error) {
-            setNotificationMessage('Error al guardar la cita. Inténtalo de nuevo.');
+            // Mostrar notificación de error
+            setNotificationMessage(error.message || 'Error al guardar la cita. Inténtalo de nuevo.');
             setSeverity('error');
             setOpenNotification(true);
         }
@@ -131,30 +161,30 @@ const Citas = () => {
             <form onSubmit={handleSubmit}>
                 {/* Campo Fecha y Hora */}
                 <div className="form-group">
-                    <label htmlFor="fechaCita">Fecha y Hora *</label>
+                    <label htmlFor="fecha">Fecha y Hora *</label> {/* Cambiado de fechaCita a fecha */}
                     <input
                         type="datetime-local"
-                        id="fechaCita"
-                        name="fechaCita"
+                        id="fecha"
+                        name="fecha" // Cambiado de fechaCita a fecha
                         required
-                        value={formData.fechaCita}
+                        value={formData.fecha} // Cambiado de fechaCita a fecha
                         onChange={handleChange}
                     />
                 </div>
 
                 {/* Campo Estilista */}
                 <div className="form-group">
-                    <label htmlFor="estilista">Preferencias de Estilista *</label>
+                    <label htmlFor="estilistaId">Preferencias de Estilista *</label> {/* Cambio en el nombre */}
                     {loadingEstilistas ? (
                         <p>Cargando estilistas...</p>
                     ) : errorEstilistas ? (
                         <p>{errorEstilistas}</p>
                     ) : (
                         <select
-                            id="estilista"
-                            name="estilista"
+                            id="estilistaId" // Cambio en el nombre
+                            name="estilistaId" // Cambio en el nombre
                             required
-                            value={formData.estilista}
+                            value={formData.estilistaId} // Cambio en el nombre
                             onChange={handleChange}
                         >
                             <option value="">Selecciona un estilista</option>
@@ -184,9 +214,9 @@ const Citas = () => {
                                     <input
                                         type="checkbox"
                                         id={`servicio-${index}`}
-                                        name="servicios"
+                                        name="detalleServicioCitaDTOS" // Cambio en el nombre
                                         value={servicio.nombre}
-                                        checked={formData.servicios.some(s => s.nombre === servicio.nombre)}
+                                        checked={formData.detalleServicioCitaDTOS.some(s => s.nombre === servicio.nombre)}
                                         onChange={handleChange}
                                     />
                                 </div>
@@ -212,9 +242,9 @@ const Citas = () => {
                                     <input
                                         type="checkbox"
                                         id={`producto-${index}`}
-                                        name="productos"
+                                        name="detalleProductoCitaDTOS" // Cambio en el nombre
                                         value={producto.nombre}
-                                        checked={formData.productos.some(p => p.nombre === producto.nombre)}
+                                        checked={formData.detalleProductoCitaDTOS.some(p => p.nombre === producto.nombre)}
                                         onChange={handleChange}
                                     />
                                 </div>

@@ -44,3 +44,23 @@ export const inicioSesion = async (cliente) => {
   
   }
 };
+
+
+// Buscar un cliente existente para iniciar sesion
+export const DatosCliente = async (cliente) => {
+  try {
+    const response = await axios.post(`${API_URL}/DatosCliente`, cliente, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    return response.data; // Devolver el resultado de la busqueda del usuario
+
+  } catch (error) {
+   
+    // Lanzamos cualquier otro error
+    throw new Error('error al encontrar al cliente');
+  
+  }
+};
