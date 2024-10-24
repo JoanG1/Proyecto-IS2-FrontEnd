@@ -1,0 +1,39 @@
+.historial-container {
+    margin-top: 20px;
+    background-color: #dddddd;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    overflow-x: auto; /* Permite el desplazamiento horizontal si la tabla es muy grande */
+}
+
+.historial-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.historial-table th,
+.historial-table td {
+    border: 1px solid #ddd;
+    padding: 12px 15px;
+    text-align: left;
+}
+
+.historial-table th {
+    background-color: #f4f4f4;
+    font-weight: bold;
+}
+
+.historial-table tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.historial-table tbody tr:hover {
+    background-color: #f1f1f1;
+}
+
+.error {
+    color: red;
+    font-weight: bold;
+}

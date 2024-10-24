@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import './Perfil.css';
-import { useNavigate } from 'react-router-dom'; // Para la navegación
+//import { useNavigate } from 'react-router-dom';
+import HistorialCita from './HistorialCita'; // Importa el componente HistorialCita
 
 const Perfil = () => {
     const [cliente, setCliente] = useState(null);
-    const navigate = useNavigate(); // Hook de navegación
+    const [mostrarHistorial, setMostrarHistorial] = useState(false); // Estado para mostrar el historial
+    //const navigate = useNavigate();
 
     useEffect(() => {
         const clienteGuardado = sessionStorage.getItem('cliente');
@@ -13,25 +15,28 @@ const Perfil = () => {
         }
     }, []);
 
-    const handleClose = () => {
-        navigate('/'); // Redirigir al usuario a la página principal o cualquier otra ruta
+    /*const handleClose = () => {
+        navigate('/');
+    };*/
+
+    const handleMostrarHistorial = () => {
+        setMostrarHistorial(true); // Cambia el estado para mostrar el historial
     };
 
     return (
         <div className="perfil-container">
-            <button className="close-button" onClick={handleClose}>
-                &times; {/* Icono de cerrar */}
-            </button>
             <h2>Mi Perfil</h2>
             {cliente ? (
                 <div className="perfil-info">
                     <p><strong>Nombre:</strong> {cliente.nombre}</p>
                     <p><strong>Email:</strong> {cliente.correo}</p>
-                    <p><strong>Historial de Citas:</strong></p>
-                    <ul>
-                        <li>Cita 1: Corte de cabello - 12/10/2024</li>
-                        <li>Cita 2: Manicura - 25/09/2024</li>
-                    </ul>
+                    {!mostrarHistorial ? (
+                        <button className="ver-historial-button" onClick={handleMostrarHistorial}>
+                            Ver Historial de Citas
+                        </button>
+                    ) : (
+                        <HistorialCita clienteId={cliente.id} />
+                    )}
                 </div>
             ) : (
                 <p>Cargando perfil...</p>

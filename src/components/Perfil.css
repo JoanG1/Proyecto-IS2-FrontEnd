@@ -1,44 +1,63 @@
 .perfil-container {
-    background-color: #333333;
-    color: white;
-    padding: 20px;
-    position: fixed;
-    border-radius: 20px;
-    right: 0;
-    top: 60px;
-    width: 300px;
-    height: 100%;
-    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-}
-
-.close-button {
-    align-self: flex-end;
-    background: none;
-    border: none;
-    font-size: 24px;
-    color: white;
-    cursor: pointer;
-}
-
-.close-button:hover {
-    color: #ff4c4c;
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 30px;
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+    max-width: 800px; /* Hacemos el contenedor más ancho */
+    margin: 40px auto; /* Centramos el contenedor en la pantalla */
+    width: 100%;
 }
 
 .perfil-info {
-    margin-top: 20px;
+    font-size: 18px;
+    margin-bottom: 20px;
 }
 
-.perfil-info p, .perfil-info ul {
+.perfil-info p {
     margin: 10px 0;
+    line-height: 1.6; /* Aumentamos el espacio entre líneas */
 }
 
-.perfil-info ul {
-    padding-left: 20px;
+h2 {
+    text-align: center;
+    font-size: 28px;
+    margin-bottom: 20px;
 }
 
-.perfil-info ul li {
-    list-style-type: disc;
+.ver-historial-button {
+    display: block;
+    width: 100%; /* Hacemos el botón ancho y largo */
+    background-color: #777; /* Cambiamos el color del botón a gris */
+    color: white;
+    padding: 15px;
+    font-size: 18px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-align: center;
+    transition: background-color 0.3s ease;
+}
+
+.ver-historial-button:hover {
+    background-color: #555;
+}
+
+.close-button {
+    background: none;
+    border: none;
+    font-size: 24px;
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    cursor: pointer;
+}
+
+.historial-container {
+    margin-top: 20px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    max-width: 100%;
+    width: 100%;
 }

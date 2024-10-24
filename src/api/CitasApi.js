@@ -85,6 +85,25 @@ export const EditarCita = async (citaId, cita) => {
         }
         }
     };
+
+    // Buscar Historial de cliente
+    export const HistorialCliente = async (clienteId) => {
+      try {
+         const response = await axios.get(`${API_URL}/${clienteId}/historial-citas`);
+        
+            return response.data; // Devolver el resultado de la busqueda del usuario
+        
+          } catch (error) {
+              if (error.response && error.response.status === 404) {
+                // Lanzamos una excepción con un mensaje personalizado para 404
+                throw new Error(error.response);
+            } else {
+                // Lanzamos cualquier otro error
+                throw new Error('Error al traer el historial');
+            }
+            }
+        };
+
   
   
   
