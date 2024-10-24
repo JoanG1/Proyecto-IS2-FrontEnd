@@ -4,18 +4,20 @@ import Notification from './Notification';
 import { obtenerEstilistas } from '../api/EstilistasApi'; 
 import { obtenerServicios } from '../api/ServiciosApi'; 
 import { obtenerProductos } from '../api/ProductosApi'; 
-import { CrearCita } from '../api/CitasApi';
+import { CrearCita, EditarCita } from '../api/CitasApi'; // Asegúrate de importar EditarCita
+import ConfirmacionCita from './ConfirmacionCita'; // Importa el componente de Confirmación
 
 const Citas = () => {
     const [formData, setFormData] = useState({
-        fecha: '', // Cambiado de fechaCita a fecha
-        estilistaId: '', // Cambiado de estilista a estilistaId
-        detalleServicioCitaDTOS: [], // Cambiado de servicios a detalleServicioCitaDTOS
-        detalleProductoCitaDTOS: [], // Cambiado de productos a detalleProductoCitaDTOS
+        fecha: '',
+        estilistaId: '',
+        detalleServicioCitaDTOS: [],
+        detalleProductoCitaDTOS: [],
         notas: '',
-        clienteId: '', // Campo para almacenar el ID del cliente
+        clienteId: '',
     });
 
+    const [citaAhora, setCitaAhora] = useState(null); // Cambiar a null inicialmente
     const [openNotification, setOpenNotification] = useState(false);
     const [notificationMessage, setNotificationMessage] = useState('');
     const [severity, setSeverity] = useState('success');
@@ -28,20 +30,20 @@ const Citas = () => {
     const [errorEstilistas, setErrorEstilistas] = useState(null); 
     const [errorServicios, setErrorServicios] = useState(null); 
     const [errorProductos, setErrorProductos] = useState(null); 
+    const [isConfirming, setIsConfirming] = useState(false); // Estado para confirmar la cita
+    const [isEditing, setIsEditing] = useState(false); // Estado para saber si se está editando
+    const [citaActual , setCitaActual] = useState(0);
 
     useEffect(() => {
-        // Obtener cliente de sessionStorage
         const clienteGuardado = sessionStorage.getItem('cliente');
         if (clienteGuardado) {
             const cliente = JSON.parse(clienteGuardado);
-            // Actualizar formData con el ID del cliente
             setFormData((prevFormData) => ({
                 ...prevFormData,
-                clienteId: cliente.id, // Asegúrate de que 'id' sea el campo correcto
+                clienteId: cliente.id,
             }));
         }
 
-        // Cargar estilistas, servicios y productos
         const fetchEstilistas = async () => {
             try {
                 const estilistasData = await obtenerEstilistas();
@@ -83,18 +85,18 @@ const Citas = () => {
     const handleChange = (e) => {
         const { name, value, checked } = e.target;
 
-        if (name === 'detalleServicioCitaDTOS') { // Cambio en el nombre de servicios
+        if (name === 'detalleServicioCitaDTOS') {
             const selectedService = servicios.find(servicio => servicio.nombre === value);
             const updatedList = checked
-                ? [...formData.detalleServicioCitaDTOS, selectedService] // Cambio en el nombre
+                ? [...formData.detalleServicioCitaDTOS, selectedService]
                 : formData.detalleServicioCitaDTOS.filter(servicio => servicio.nombre !== value);
 
             setFormData({ ...formData, [name]: updatedList });
 
-        } else if (name === 'detalleProductoCitaDTOS') { // Cambio en el nombre de productos
+        } else if (name === 'detalleProductoCitaDTOS') {
             const selectedProduct = productos.find(producto => producto.nombre === value);
             const updatedList = checked
-                ? [...formData.detalleProductoCitaDTOS, selectedProduct] // Cambio en el nombre
+                ? [...formData.detalleProductoCitaDTOS, selectedProduct]
                 : formData.detalleProductoCitaDTOS.filter(producto => producto.nombre !== value);
 
             setFormData({ ...formData, [name]: updatedList });
@@ -115,157 +117,201 @@ const Citas = () => {
         }
     
         try {
-
-            // Llamada a la API para crear la cita
             const nuevaCita = {
-                fecha: formData.fecha+":00", // Cambiado de fechaCita a fecha
-                detalleServicioCitaDTOS: formData.detalleServicioCitaDTOS, // Cambio en el nombre
-                detalleProductoCitaDTOS: formData.detalleProductoCitaDTOS, // Cambio en el nombre
+                fecha: formData.fecha + ":00",
+                detalleServicioCitaDTOS: formData.detalleServicioCitaDTOS,
+                detalleProductoCitaDTOS: formData.detalleProductoCitaDTOS,
                 clienteId: formData.clienteId,
-                estilistaId: Number(formData.estilistaId) // Cambio en el nombre
+                estilistaId: Number(formData.estilistaId),
             };
 
-            console.log(nuevaCita);
-    
-            const respuesta = await CrearCita(nuevaCita);
-    
-            // Mostrar notificación de éxito
-            setNotificationMessage('Cita guardada y agendada correctamente.');
+            if (isEditing && citaAhora) {
+
+                const nuevaCita = {
+                    fecha: formData.fecha + ":00",
+                    detalleServicioCitaDTOS: formData.detalleServicioCitaDTOS,
+                    detalleProductoCitaDTOS: formData.detalleProductoCitaDTOS,
+                    estilistaId: Number(formData.estilistaId),
+                };
+                // Editar cita existente
+                console.log(nuevaCita)
+                await EditarCita(citaActual, nuevaCita); // Asumiendo que hay una cita creada
+                setNotificationMessage('Cita editada correctamente.');
+            } else {
+                const citaId = await CrearCita(nuevaCita);
+                console.log(citaId)
+                setCitaActual(citaId)
+                setNotificationMessage('Cita guardada y agendada correctamente.');
+            }
+
             setSeverity('success');
             setOpenNotification(true);
-    
-            // Limpiar el formulario
-            setFormData({
-                fecha: '', // Cambiado de fechaCita a fecha
-                estilistaId: '', // Cambio en el nombre
-                detalleServicioCitaDTOS: [], // Cambio en el nombre
-                detalleProductoCitaDTOS: [], // Cambio en el nombre
-                notas: '',
-                clienteId: formData.clienteId, // Mantener el clienteId
+            setIsConfirming(true); // Cambiar el estado a confirmación
+
+            setCitaAhora({
+                ...nuevaCita // Asegúrate de guardar el ID si estás editando
             });
+
+            setFormData({
+                fecha: "",
+                estilistaId: "",
+                detalleServicioCitaDTOS: [],
+                detalleProductoCitaDTOS: [],
+                notas: '',
+                clienteId: formData.clienteId,
+            });
+
+            
+
         } catch (error) {
-            // Mostrar notificación de error
-            setNotificationMessage(error.message || 'Error al guardar la cita. Inténtalo de nuevo.');
+            setNotificationMessage(error.message || 'Error. Inténtalo de nuevo.');
             setSeverity('error');
             setOpenNotification(true);
         }
     };
 
+    const imprimir= () =>{
+
+        console.log(citaAhora)
+        console.log(citaActual)
+    }
+
     const handleCloseNotification = () => {
         setOpenNotification(false);
+        imprimir();
+    };
+
+    const handleEdit = () => {
+        setFormData({
+            fecha: citaAhora.fecha,
+            estilistaId: citaAhora.estilistaId,
+            detalleServicioCitaDTOS: citaAhora.detalleServicioCitaDTOS,
+            detalleProductoCitaDTOS: citaAhora.detalleProductoCitaDTOS,
+            notas: citaAhora.notas,
+            clienteId: citaAhora.clienteId,
+        });
+        setIsEditing(true); // Cambiar a modo de edición
+        setIsConfirming(false); // Desactivar el estado de confirmación
     };
 
     return (
         <div className="citas">
             <h2>Reserva tu Cita</h2>
-            <form onSubmit={handleSubmit}>
-                {/* Campo Fecha y Hora */}
-                <div className="form-group">
-                    <label htmlFor="fecha">Fecha y Hora *</label> {/* Cambiado de fechaCita a fecha */}
-                    <input
-                        type="datetime-local"
-                        id="fecha"
-                        name="fecha" // Cambiado de fechaCita a fecha
-                        required
-                        value={formData.fecha} // Cambiado de fechaCita a fecha
-                        onChange={handleChange}
-                    />
-                </div>
-
-                {/* Campo Estilista */}
-                <div className="form-group">
-                    <label htmlFor="estilistaId">Preferencias de Estilista *</label> {/* Cambio en el nombre */}
-                    {loadingEstilistas ? (
-                        <p>Cargando estilistas...</p>
-                    ) : errorEstilistas ? (
-                        <p>{errorEstilistas}</p>
-                    ) : (
-                        <select
-                            id="estilistaId" // Cambio en el nombre
-                            name="estilistaId" // Cambio en el nombre
+            {isConfirming ? (
+                <ConfirmacionCita cita={citaAhora} onEdit={handleEdit} citaId={citaActual} />
+            ) : (
+                <form onSubmit={handleSubmit}>
+                    {/* Campo Fecha y Hora */}
+                    <div className="form-group">
+                        <label htmlFor="fecha">Fecha y Hora *</label>
+                        <input
+                            type="datetime-local"
+                            id="fecha"
+                            name="fecha"
                             required
-                            value={formData.estilistaId} // Cambio en el nombre
+                            value={formData.fecha}
                             onChange={handleChange}
-                        >
-                            <option value="">Selecciona un estilista</option>
-                            {estilistas.map((estilista, index) => (
-                                <option key={index} value={estilista.id}>
-                                    {estilista.nombre}
-                                </option>
-                            ))}
-                        </select>
-                    )}
-                </div>
+                        />
+                    </div>
 
-                {/* Servicios */}
-                <h3>Servicios *</h3>
-                <div className="service-container">
-                    {loadingServicios ? (
-                        <p>Cargando servicios...</p>
-                    ) : errorServicios ? (
-                        <p>{errorServicios}</p>
-                    ) : (
-                        <div className="checkbox-group">
-                            {servicios.map((servicio, index) => (
-                                <div className="checkbox-item" key={index}>
-                                    <label className="checkbox-label" htmlFor={`servicio-${index}`}>
-                                        {servicio.nombre}
-                                    </label>
-                                    <input
-                                        type="checkbox"
-                                        id={`servicio-${index}`}
-                                        name="detalleServicioCitaDTOS" // Cambio en el nombre
-                                        value={servicio.nombre}
-                                        checked={formData.detalleServicioCitaDTOS.some(s => s.nombre === servicio.nombre)}
-                                        onChange={handleChange}
-                                    />
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
+                    {/* Campo Estilista */}
+                    <div className="form-group">
+                        <label htmlFor="estilistaId">Preferencias de Estilista *</label>
+                        {loadingEstilistas ? (
+                            <p>Cargando estilistas...</p>
+                        ) : errorEstilistas ? (
+                            <p>{errorEstilistas}</p>
+                        ) : (
+                            <select
+                                id="estilistaId"
+                                name="estilistaId"
+                                required
+                                value={formData.estilistaId}
+                                onChange={handleChange}
+                            >
+                                <option value="">Selecciona un estilista</option>
+                                {estilistas.map((estilista, index) => (
+                                    <option key={index} value={estilista.id}>
+                                        {estilista.nombre}
+                                    </option>
+                                ))}
+                            </select>
+                        )}
+                    </div>
 
-                {/* Productos */}
-                <h3>Productos *</h3>
-                <div className="product-container">
-                    {loadingProductos ? (
-                        <p>Cargando productos...</p>
-                    ) : errorProductos ? (
-                        <p>{errorProductos}</p>
-                    ) : (
-                        <div className="checkbox-group">
-                            {productos.map((producto, index) => (
-                                <div className="checkbox-item" key={index}>
-                                    <label className="checkbox-label" htmlFor={`producto-${index}`}>
-                                        {producto.nombre} - ${producto.precio}
-                                    </label>
-                                    <input
-                                        type="checkbox"
-                                        id={`producto-${index}`}
-                                        name="detalleProductoCitaDTOS" // Cambio en el nombre
-                                        value={producto.nombre}
-                                        checked={formData.detalleProductoCitaDTOS.some(p => p.nombre === producto.nombre)}
-                                        onChange={handleChange}
-                                    />
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
+                    {/* Servicios */}
+                    <h3>Servicios *</h3>
+                    <div className="service-container">
+                        {loadingServicios ? (
+                            <p>Cargando servicios...</p>
+                        ) : errorServicios ? (
+                            <p>{errorServicios}</p>
+                        ) : (
+                            <div className="checkbox-group">
+                                {servicios.map((servicio, index) => (
+                                    <div className="checkbox-item" key={index}>
+                                        <label className="checkbox-label" htmlFor={`servicio-${index}`}>
+                                            {servicio.nombre}
+                                        </label>
+                                        <input
+                                            type="checkbox"
+                                            id={`servicio-${index}`}
+                                            name="detalleServicioCitaDTOS"
+                                            value={servicio.nombre}
+                                            checked={formData.detalleServicioCitaDTOS.some(s => s.nombre === servicio.nombre)}
+                                            onChange={handleChange}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
 
-                {/* Campo Notas */}
-                <div className="form-group">
-                    <label htmlFor="notas">Notas Adicionales (opcional)</label>
-                    <textarea
-                        id="notas"
-                        name="notas"
-                        value={formData.notas}
-                        onChange={handleChange}
-                    />
-                </div>
+                    {/* Productos */}
+                    <h3>Productos</h3>
+                    <div className="product-container">
+                        {loadingProductos ? (
+                            <p>Cargando productos...</p>
+                        ) : errorProductos ? (
+                            <p>{errorProductos}</p>
+                        ) : (
+                            <div className="checkbox-group">
+                                {productos.map((producto, index) => (
+                                    <div className="checkbox-item" key={index}>
+                                        <label className="checkbox-label" htmlFor={`producto-${index}`}>
+                                            {producto.nombre}
+                                        </label>
+                                        <input
+                                            type="checkbox"
+                                            id={`producto-${index}`}
+                                            name="detalleProductoCitaDTOS"
+                                            value={producto.nombre}
+                                            checked={formData.detalleProductoCitaDTOS.some(p => p.nombre === producto.nombre)}
+                                            onChange={handleChange}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
 
-                <button type="submit">Reservar Cita</button>
-            </form>
+                    {/* Campo Notas */}
+                    <div className="form-group">
+                        <label htmlFor="notas">Notas</label>
+                        <textarea
+                            id="notas"
+                            name="notas"
+                            value={formData.notas}
+                            onChange={handleChange}
+                        />
+                    </div>
+
+                    {/* Botón de Envío */}
+                    <button type="submit" className="submit-button">
+                        {isEditing ? "Editar Cita" : "Reservar Cita"}
+                    </button>
+                </form>
+            )}
 
             {/* Componente de notificación */}
             <Notification

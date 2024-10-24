@@ -1,7 +1,6 @@
-// src/components/Navbar.js
 import React from 'react';
 import { Link } from 'react-router-dom';
-import './NavBar.css'; // Para estilos personalizados
+import './NavBar.css'; 
 
 const Navbar = () => {
     return (
@@ -13,6 +12,9 @@ const Navbar = () => {
                 </li>
                 <li>
                     <Link to="/citas">Citas</Link>
+                </li>
+                <li>
+                    <Link to="/perfil">Perfil</Link> {/* Nueva ruta para el perfil */}
                 </li>
             </ul>
         </nav>
